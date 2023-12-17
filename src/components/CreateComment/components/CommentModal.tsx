@@ -2,13 +2,16 @@ import { Button, Dialog, DialogActions, DialogContent, DialogContentText, Dialog
 import { FC } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { ErrorMessage } from './ErrorMessage';
+import { useDispatch } from 'react-redux';
+import { actions } from '../../../store/ducks';
+import * as dayjs from 'dayjs';
 
 type Props = {
     isOpen: boolean;
     handleClose: () => void;
 }
 
-type Comment = {
+type FormType = {
     name: string,
     email: string,
     commentText: string,
@@ -22,17 +25,37 @@ type Comment = {
  */
 
 export const CommentModal: FC<Props> = ({isOpen, handleClose}) => {
+    const dispatch = useDispatch()
     
-    const { control, handleSubmit, formState: { errors } } = useForm<Comment>({
+    const { control, handleSubmit, reset, formState: { errors } } = useForm<FormType>({
         defaultValues: {
             name: '',
             email: '',
             commentText: '',
         }
     });
-    const onSubmit = (data: Comment) => console.log(data);
+
+    const onCloseModal = () => {
+        reset();
+        handleClose();
+    }
     
-    return <Dialog open={isOpen} onClose={handleClose}>
+    const onSubmit = (data: FormType) => {
+        const newComment = {
+            id: dayjs().toString(),
+            author: data.name,
+            email: data.email,
+            text: data.commentText,
+            date: dayjs(),
+            isHidden: false,
+            rating: 0
+        }
+
+        dispatch(actions.comment.addComment(newComment));
+        onCloseModal();
+    };
+    
+    return <Dialog open={isOpen} onClose={onCloseModal}>
         <DialogTitle>Создание комментария</DialogTitle>
         <form onSubmit={handleSubmit(onSubmit)}>
             <DialogContent>
@@ -78,7 +101,7 @@ export const CommentModal: FC<Props> = ({isOpen, handleClose}) => {
                 {errors.commentText?.type === 'required' && <ErrorMessage>Обязательное поле</ErrorMessage>}
             </DialogContent>
             <DialogActions>
-                <Button onClick={handleClose}>Отмена</Button>
+                <Button onClick={onCloseModal}>Отмена</Button>
                 <button type='submit'>Отправить</button>
             </DialogActions>
         </form>
@@ -100,13 +123,13 @@ const Textarea = styled(TextareaAutosize)(
     box-shadow: 0px 2px 2px gray;
 
     &:hover {
-      border-color: blue;
+      border-color: #b6b6db;
     }
 
     &:focus {
       outline: 0;
-      border-color: blue;
-      box-shadow: 0 0 0 3px blue;
+      border-color: #b6b6db;
+      box-shadow: 0 0 0 1px #b6b6db;
     }
 
     // firefox
