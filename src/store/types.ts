@@ -1,7 +1,10 @@
+import { Dayjs } from "dayjs";
+
 export type Comment = {
     id: string;
-    autor: string;
-    date: Date;
+    author: string;
+    email: string;
+    date: Dayjs;
     text: string;
     rating: number;
     isHidden: boolean;
