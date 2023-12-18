@@ -1,4 +1,4 @@
-import { FC, useMemo } from "react";
+import { FC, useEffect, useMemo } from "react";
 import styled from "styled-components";
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
@@ -8,12 +8,24 @@ import { useDispatch } from 'react-redux';
 import { actions } from "../../../store/ducks";
 import * as dayjs from 'dayjs';
 
-export const CommentComponent: FC<Comment> = ({ id, author, text, date, rating }) => {
+/**
+ * Компонент отражающий комментарий
+ * 
+ * @param {Comment} comment - объект комментария.
+ */
+
+export const CommentComponent: FC<Comment> = ({ id, author, text, date, rating, isHidden }) => {
     const dispatch = useDispatch()
 
     const increaseRating = () => dispatch(actions.comment.setRating({ id, rating: rating + 1 }))
 
     const decreaseRating = () => dispatch(actions.comment.setRating({ id, rating: rating - 1 }))
+
+    useEffect(() => {
+        if (rating < -10) {
+            dispatch(actions.comment.toggleComment(id));
+        }
+    }, [dispatch, id, rating])
 
     const duration = useMemo(() => {
         const diff = dayjs.duration(dayjs().diff(date));
@@ -26,7 +38,11 @@ export const CommentComponent: FC<Comment> = ({ id, author, text, date, rating }
         return `${diff.asDays().toFixed()} суток назад`
     }, [date]);
 
-    return <Wrapper>
+    const toggleComment = () => {
+        dispatch(actions.comment.toggleComment(id));
+    }
+
+    return rating < -10 && isHidden ? <LinkComment onClick={toggleComment}>Открыть комментарий</LinkComment> : <Wrapper>
         <Avatar>{author.slice(0, 2)?.toUpperCase()}</Avatar>
         <Column>
             <Row>
@@ -76,4 +92,7 @@ const Date = styled.span`
 
 const Rating = styled(Text)`
     margin: 0 5px;
+`
+const LinkComment = styled.a`
+    cursor: pointer;
 `
